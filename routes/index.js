@@ -35,6 +35,9 @@ const findByValue = (array, value, key) => {
 
 /** POST assign butler. */
 router.post("/assign", async (req, res, next) => {
+  assignedRequest = [];
+  assignedHour = 0;
+  butlerRequests = [];
   let requests = req.body;
   let butlers = [];
   await requests.map(client => {
