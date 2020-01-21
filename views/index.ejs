@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@16/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+    ></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1><%= title %></h1>
+      <p>Welcome to <%= title %></p>
+    </div>
+    <div id="myJarvis"></div>
+
+    <script type="text/babel">
+      class Box extends React.Component {
+        constructor() {
+          super();
+
+          this.state = {
+            clients: [
+              {
+                clientId: "",
+                requestId: "",
+                hours: ""
+              }
+            ],
+            butlers: [],
+            spreadClients: []
+          };
+        }
+
+        handleChange = (e, index) => {
+          let clients = this.state.clients;
+          clients[index][e.target.name] = e.target.value;
+          this.setState({
+            clients
+          });
+        };
+
+        handleAdd = () => {
+          let clients = this.state.clients;
+          clients[clients.length] = {
+            clientId: "",
+            requestId: "",
+            hours: ""
+          };
+          this.setState({
+            clients
+          });
+        };
+
+        handleSubmit = async () => {
+          let clients = this.state.clients.filter(client => {
+            return (
+              client.clientId !== "" &&
+              client.requestId !== "" &&
+              client.hours !== ""
+            );
+          });
+          const rawResponse = await fetch("assign", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(clients)
+          });
+          const data = await rawResponse.json();
+          this.setState({
+            spreadClients: data.spreadClientIds,
+            butlers: data.butlers
+          });
+        };
+
+        render() {
+          return (
+            <div className="container">
+              <div className="row">
+                <div className="col-md-7">
+                  <div className="row">
+                    <button
+                      onClick={this.handleAdd}
+                      className="col-md-4 btn btn-primary"
+                    >
+                      Add request
+                    </button>
+                    <div className="col-md-3"></div>
+                    <button
+                      onClick={this.handleSubmit}
+                      className="col-md-4 btn btn-success"
+                    >
+                      Assign butler
+                    </button>
+                  </div>
+                  <br />
+                  {this.state.clients.map((client, index) => {
+                    return (
+                      <React.Fragment key={index}>
+                        <div className="row">
+                          <div className="col-md-3">
+                            <input
+                              className="form-control"
+                              type="number"
+                              name="clientId"
+                              onChange={e => this.handleChange(e, index)}
+                              value={client.clientId}
+                              placeholder="Client Id"
+                            />
+                          </div>
+                          <div className="col-md-3">
+                            <input
+                              className="form-control"
+                              name="requestId"
+                              type="text"
+                              value={client.requestId}
+                              onChange={e => this.handleChange(e, index)}
+                              placeholder="Request Id"
+                            />
+                          </div>
+                          <div className="col-md-3">
+                            <input
+                              className="form-control"
+                              name="hours"
+                              type="number"
+                              max={8}
+                              min={1}
+                              value={client.hours}
+                              onChange={e => this.handleChange(e, index)}
+                              placeholder="Hours (1 - 8)"
+                            />
+                          </div>
+                        </div>
+                        <br />
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+                <div className="col-md-5">
+                  {this.state.spreadClients.length > 0 && (
+                    <React.Fragment>
+                      <h4>
+                        Spread Client Ids: {this.state.spreadClients.join(",")}
+                      </h4>
+                      <h4>Butlers: </h4>
+                      <ul>
+                        {this.state.butlers.map((butler, index) => {
+                          return (
+                            <li key={index}>
+                              Butler - {index + 1}: {butler.requests.join(",")}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </React.Fragment>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+      }
+      ReactDOM.render(<Box />, document.getElementById("myJarvis"));
+    </script>
+  </body>
+</html>
